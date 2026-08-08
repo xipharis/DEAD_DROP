@@ -5,7 +5,24 @@ import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { PageShell } from "@/components/layout/PageShell";
 import { ScrollStory } from "@/components/docs/ScrollStory";
-import { MaskLines, Plate, Reveal, SectionHead } from "@/components/docs/primitives";
+import {
+  MaskLines,
+  ParallaxSection,
+  Plate,
+  Reveal,
+  SectionHead,
+  StaggerReveal,
+} from "@/components/docs/primitives";
+
+function ScrollProgress() {
+  const { scrollYProgress } = useScroll();
+  return (
+    <motion.div
+      className="fixed top-0 left-0 right-0 h-[2px] bg-[#C8102E] origin-left z-50"
+      style={{ scaleX: scrollYProgress }}
+    />
+  );
+}
 
 /* ── the protocol in numbers — multi-speed parallax columns ─────────────── */
 
@@ -111,6 +128,7 @@ const THREAT = [
 export default function DocsPage() {
   return (
     <PageShell>
+      <ScrollProgress />
       <div className="overflow-x-clip">
         {/* ── hero ── */}
         <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-20 pb-10">
@@ -181,22 +199,20 @@ export default function DocsPage() {
             title="Four checks, no network"
             sub="Everything a relayer decides, it decides offline — before a single RPC call is made."
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {ADMISSION.map((plate, i) => (
-              <Reveal key={plate.label} delay={i * 0.08}>
-                <Plate label={plate.label}>
-                  <div className="font-mono text-[13px] leading-relaxed whitespace-pre text-[color:var(--text-primary)] overflow-x-auto">
-                    {plate.lines.map((line) => (
-                      <p key={line}>{line}</p>
-                    ))}
-                  </div>
-                  <p className="font-serif text-sm leading-relaxed mt-4 text-[color:var(--text-muted)]">
-                    {plate.note}
-                  </p>
-                </Plate>
-              </Reveal>
+          <StaggerReveal className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {ADMISSION.map((plate) => (
+              <Plate key={plate.label} label={plate.label}>
+                <div className="font-mono text-[13px] leading-relaxed whitespace-pre text-[color:var(--text-primary)] overflow-x-auto">
+                  {plate.lines.map((line) => (
+                    <p key={line}>{line}</p>
+                  ))}
+                </div>
+                <p className="font-serif text-sm leading-relaxed mt-4 text-[color:var(--text-muted)]">
+                  {plate.note}
+                </p>
+              </Plate>
             ))}
-          </div>
+          </StaggerReveal>
         </section>
 
         {/* ── 09 / TWO ROLES ── */}
@@ -259,7 +275,7 @@ export default function DocsPage() {
             title="One shared protocol, two ends"
             sub="Signer and relayer never talk to each other. They only agree on a file."
           />
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-stretch">
+          <ParallaxSection speed={18} className="grid grid-cols-1 md:grid-cols-5 gap-4 items-stretch">
             <Reveal className="md:col-span-2">
               <div className="h-full flex flex-col justify-center space-y-4">
                 <p className="font-serif text-[15px] leading-relaxed text-[color:var(--text-muted)]">
@@ -287,7 +303,7 @@ export default function DocsPage() {
                 <p className="pl-6 text-[color:var(--text-primary)]">apps/relayer ─ listens, vets, broadcasts</p>
               </div>
             </Reveal>
-          </div>
+          </ParallaxSection>
           <Reveal delay={0.2}>
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-8 font-mono text-[10px] tracking-[0.15em] uppercase text-[color:var(--text-subtle)]">
               <span>viem EIP-1559</span>
@@ -310,20 +326,18 @@ export default function DocsPage() {
             title="What this actually buys you"
             sub="Stated plainly, including the parts that are not flattering."
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {THREAT.map((item, i) => (
-              <Reveal key={item.label} delay={i * 0.08}>
-                <Plate label={item.label}>
-                  <p className="font-serif italic text-[15px] leading-relaxed text-[color:var(--text-primary)]">
-                    {item.quote}
-                  </p>
-                  <p className="font-serif text-sm leading-relaxed mt-3 text-[color:var(--text-muted)]">
-                    {item.note}
-                  </p>
-                </Plate>
-              </Reveal>
+          <StaggerReveal className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {THREAT.map((item) => (
+              <Plate key={item.label} label={item.label}>
+                <p className="font-serif italic text-[15px] leading-relaxed text-[color:var(--text-primary)]">
+                  {item.quote}
+                </p>
+                <p className="font-serif text-sm leading-relaxed mt-3 text-[color:var(--text-muted)]">
+                  {item.note}
+                </p>
+              </Plate>
             ))}
-          </div>
+          </StaggerReveal>
           <Reveal delay={0.2}>
             <p className="font-mono text-[11px] mt-8 text-[color:var(--text-subtle)]">
               This is hackathon software, and the default configuration targets a testnet. Keys
@@ -333,12 +347,37 @@ export default function DocsPage() {
           </Reveal>
         </section>
 
+        {/* ── source ── */}
+        <section className="max-w-4xl mx-auto px-4 sm:px-6 pt-8 pb-4">
+          <Reveal>
+            <a
+              href="https://github.com/PhAnToMxSD/DEAD_DROP"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-between gap-4 border border-[color:var(--border-dim)] rounded px-5 py-4 hover:border-[#C8102E] transition-colors duration-200 group"
+              style={{ background: "var(--bg-surface)" }}
+            >
+              <span className="font-mono text-xs tracking-widest uppercase text-[color:var(--text-muted)] group-hover:text-[#C8102E] transition-colors duration-200">
+                Read the source
+              </span>
+              <span className="font-mono text-xs text-[color:var(--text-subtle)] group-hover:text-[#C8102E] transition-colors duration-200">
+                github.com/PhAnToMxSD/DEAD_DROP ↗
+              </span>
+            </a>
+          </Reveal>
+        </section>
+
         {/* ── closing CTA ── */}
-        <section className="max-w-4xl mx-auto px-4 sm:px-6 pt-28 pb-16">
+        <section className="max-w-4xl mx-auto px-4 sm:px-6 pt-8 pb-16">
           <Reveal>
             <div
               className="border border-[color:var(--border-dim)] rounded px-6 py-14 sm:py-16 text-center relative overflow-hidden"
-              style={{ background: "var(--bg-surface)" }}
+              style={{
+                background:
+                  "linear-gradient(120deg, var(--bg-surface) 0%, rgba(200,16,46,0.08) 50%, var(--bg-surface) 100%)",
+                backgroundSize: "200% 200%",
+                animation: "cta-gradient 8s ease infinite",
+              }}
             >
               <p className="font-mono text-[10px] tracking-[0.3em] uppercase text-[#C8102E] mb-4 relative">
                 End of transmission

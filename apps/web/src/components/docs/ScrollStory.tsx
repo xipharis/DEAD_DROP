@@ -155,6 +155,19 @@ export function ScrollStory() {
             className="w-full h-[78%] mt-2"
             aria-hidden="true"
           >
+            {/* ── watermark ── */}
+            <text
+              x={VB_W - 12}
+              y={VB_H - 12}
+              textAnchor="end"
+              className="font-mono"
+              fontSize={10}
+              fill={HAIR}
+              letterSpacing={2}
+            >
+              DEAD DROP
+            </text>
+
             {/* ── endpoints ── */}
             <motion.g style={{ opacity: endsO }}>
               <rect
@@ -561,16 +574,18 @@ function Relayer({
       >
         R{i + 1}
       </text>
-      <motion.text
-        x={R_CX + R_R + 8}
-        y={y + 4}
-        className="font-mono"
-        fontSize={9}
-        fill={EMERALD}
-        style={{ opacity: vetO }}
-      >
-        ok
-      </motion.text>
+      <motion.g style={{ opacity: vetO }}>
+        <text
+          x={R_CX + R_R + 8}
+          y={y + 4}
+          className="font-mono"
+          fontSize={9}
+          fill={EMERALD}
+          style={{ animation: "relayer-ok-pulse 1.4s ease-in-out infinite" }}
+        >
+          ok
+        </text>
+      </motion.g>
     </motion.g>
   );
 }

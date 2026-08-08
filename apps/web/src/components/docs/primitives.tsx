@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 
 export function Reveal({
   children,
@@ -13,14 +14,66 @@ export function Reveal({
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 26 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 26, scale: 0.97 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ delay, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       className={className}
     >
       {children}
     </motion.div>
+  );
+}
+
+export function StaggerReveal({
+  children,
+  className = "",
+  stagger = 0.08,
+}: {
+  children: React.ReactNode[];
+  className?: string;
+  stagger?: number;
+}) {
+  return (
+    <motion.div
+      className={className}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, margin: "-60px" }}
+      variants={{ hidden: {}, show: { transition: { staggerChildren: stagger } } }}
+    >
+      {children.map((child, i) => (
+        <motion.div
+          key={i}
+          variants={{
+            hidden: { opacity: 0, y: 22, scale: 0.97 },
+            show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
+          }}
+        >
+          {child}
+        </motion.div>
+      ))}
+    </motion.div>
+  );
+}
+
+export function ParallaxSection({
+  children,
+  className = "",
+  speed = 40,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  speed?: number;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const y = useTransform(scrollYProgress, [0, 1], [speed, -speed]);
+
+  return (
+    <div ref={ref} className={className}>
+      <motion.div style={{ y }}>{children}</motion.div>
+    </div>
   );
 }
 
