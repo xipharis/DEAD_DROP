@@ -8,6 +8,7 @@ import { DropPanel, type TransportState } from "@/components/DropPanel";
 import { StatusRail } from "@/components/StatusRail";
 import { CHAIN_ID, NOSTR_RELAYS } from "@/lib/config";
 import { publishDrop, relayLabel } from "@/lib/nostr";
+import { fetchExpectedNonce } from "@/lib/nonceCheck";
 import { payloadBytes, renderQr } from "@/lib/qr";
 import { useAirgap } from "@/lib/useAirgap";
 import {
@@ -30,6 +31,8 @@ export default function SignPage() {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [nostr, setNostr] = useState<TransportState>(IDLE);
   const [clipboard, setClipboard] = useState<TransportState>(IDLE);
+  const [expectedNonce, setExpectedNonce] = useState<number | null>(null);
+  const [checkingNonce, setCheckingNonce] = useState(false);
 
   const errors = validateDraft(draft);
   const encodedBytes = drop ? payloadBytes(drop.encoded) : 0;
@@ -75,6 +78,29 @@ export default function SignPage() {
       })
       .catch(() => {
         if (live) setQrDataUrl(null);
+      });
+    return () => {
+      live = false;
+    };
+  }, [drop]);
+
+  // Runs automatically once a drop exists — the one place this app touches an
+  // RPC. It only informs the warning below; a slow or unreachable check never
+  // blocks publishing.
+  useEffect(() => {
+    if (!drop) {
+      setExpectedNonce(null);
+      return;
+    }
+    let live = true;
+    setCheckingNonce(true);
+    setExpectedNonce(null);
+    fetchExpectedNonce(drop.from, drop.envelope.chainId)
+      .then((nonce) => {
+        if (live) setExpectedNonce(nonce);
+      })
+      .finally(() => {
+        if (live) setCheckingNonce(false);
       });
     return () => {
       live = false;
@@ -135,6 +161,8 @@ export default function SignPage() {
           nostr={nostr}
           clipboard={clipboard}
           relays={NOSTR_RELAYS}
+          expectedNonce={expectedNonce}
+          checkingNonce={checkingNonce}
           onPublish={() => void handlePublish()}
           onCopy={() => void handleCopy()}
         />

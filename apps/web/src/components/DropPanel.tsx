@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { formatEther } from "viem";
 import { MAX_QR_PAYLOAD_BYTES, inspectRawTx } from "@dead-drop/protocol";
 import { Button } from "@/components/ui/Button";
@@ -23,6 +23,8 @@ export interface DropPanelProps {
   nostr: TransportState;
   clipboard: TransportState;
   relays: string[];
+  expectedNonce: number | null;
+  checkingNonce: boolean;
   onPublish: () => void;
   onCopy: () => void;
 }
@@ -69,9 +71,33 @@ function Transport({
   );
 }
 
-function Row({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function Row({
+  label,
+  value,
+  accent,
+  copyValue,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+  /** Full, untruncated value to copy. Omit for rows that shouldn't be copyable. */
+  copyValue?: string;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    if (!copyValue) return;
+    try {
+      await navigator.clipboard.writeText(copyValue);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Clipboard denied — the value is still on screen to select by hand.
+    }
+  };
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-[92px_minmax(0,1fr)] gap-1 sm:gap-3 px-3 py-2.5 bg-[color:var(--bg-surface)]">
+    <div className="grid grid-cols-1 sm:grid-cols-[92px_minmax(0,1fr)_auto] items-start gap-1 sm:gap-3 px-3 py-2.5 bg-[color:var(--bg-surface)]">
       <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-[color:var(--text-subtle)] pt-0.5">
         {label}
       </span>
@@ -82,6 +108,17 @@ function Row({ label, value, accent }: { label: string; value: string; accent?: 
       >
         {value}
       </span>
+      {copyValue ? (
+        <button
+          type="button"
+          onClick={() => void handleCopy()}
+          className="font-mono text-[10px] tracking-[0.1em] uppercase text-[color:var(--text-subtle)] hover:text-[#C8102E] transition-colors duration-200 justify-self-start sm:justify-self-end"
+        >
+          {copied ? "Copied" : "Copy"}
+        </button>
+      ) : (
+        <span />
+      )}
     </div>
   );
 }
@@ -100,12 +137,16 @@ export function DropPanel({
   nostr,
   clipboard,
   relays,
+  expectedNonce,
+  checkingNonce,
   onPublish,
   onCopy,
 }: DropPanelProps) {
   // Re-derived from the signed bytes rather than from the form, so the panel
   // shows what was actually signed — not what the user meant to sign.
   const tx = useMemo(() => (drop ? inspectRawTx(drop.envelope.rawTx) : null), [drop]);
+  const nonceMismatch =
+    tx?.nonce !== undefined && expectedNonce !== null && tx.nonce !== expectedNonce;
 
   return (
     <section
@@ -178,7 +219,7 @@ export function DropPanel({
           ) : null}
 
           <div className="grid gap-px mt-7 bg-[color:var(--border-dim)] border border-[color:var(--border-dim)] rounded overflow-hidden">
-            <Row label="Hash" value={truncateHex(drop.hash, 14, 12)} accent />
+            <Row label="Hash" value={truncateHex(drop.hash, 14, 12)} copyValue={drop.hash} accent />
             <Row label="From" value={truncateHex(drop.from, 14, 12)} />
             <Row label="To" value={tx?.to ? truncateHex(tx.to, 14, 12) : "contract creation"} />
             <Row label="Value" value={`${formatEther(tx?.value ?? 0n)} ETH`} />
@@ -189,6 +230,48 @@ export function DropPanel({
               value={drop.darkForSeconds === null ? "with network up" : "dark"}
             />
             {drop.envelope.memo ? <Row label="Memo" value={drop.envelope.memo} /> : null}
+          </div>
+
+          <div
+            className={`flex gap-3 border rounded px-4 py-3 mt-7 text-sm ${
+              nonceMismatch ? "border-[rgba(200,16,46,0.35)]" : "border-[color:var(--border-dim)]"
+            }`}
+            style={{ background: nonceMismatch ? "rgba(200,16,46,0.06)" : "var(--bg-surface)" }}
+          >
+            <span
+              className={`lamp mt-1.5 ${nonceMismatch ? "lamp--failed" : ""}`}
+              aria-hidden="true"
+            />
+            <span className="font-serif leading-relaxed text-[color:var(--text-muted)]">
+              {checkingNonce ? (
+                <>Checking this address's real next nonce against the chain…</>
+              ) : nonceMismatch ? (
+                <>
+                  <strong className="font-display font-bold text-[#C8102E]">
+                    Signed for nonce {tx?.nonce} but the chain expects {expectedNonce}.
+                  </strong>{" "}
+                  A relayer can still accept and broadcast this instantly, but it will not confirm
+                  until every nonce from {expectedNonce} up to {tx?.nonce} exists for this
+                  address. This transaction will likely sit unconfirmed indefinitely.
+                </>
+              ) : expectedNonce !== null ? (
+                <>
+                  <strong className="font-display font-bold text-[color:var(--text-primary)]">
+                    Nonce {tx?.nonce} matches the chain.
+                  </strong>{" "}
+                  This can be included as soon as a relayer submits it.
+                </>
+              ) : (
+                <>
+                  <strong className="font-display font-bold text-[color:var(--text-primary)]">
+                    Could not verify nonce {tx?.nonce} against the chain.
+                  </strong>{" "}
+                  Publishing does not itself check this — if it does not match this account's
+                  real next nonce, it will not confirm until it does. Double-check it against a
+                  block explorer before publishing.
+                </>
+              )}
+            </span>
           </div>
 
           <p className="font-mono text-[10px] tracking-[0.25em] uppercase text-[color:var(--text-subtle)] mt-8 mb-1">
