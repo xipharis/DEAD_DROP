@@ -167,6 +167,10 @@ Run a relayer (separate terminal):
 pnpm dev:relayer
 ```
 
+Set `DRY_RUN=true` to watch the swarm without broadcasting: the relayer validates and logs
+every drop it sees but never calls an RPC, so it needs no `RPC_URL` at all. It is the honest
+way to rehearse the demo.
+
 Everything is configured through `.env` — see `.env.example`, where each variable is documented
 inline. The only variable that touches Ethereum infrastructure is `RPC_URL`, and it belongs to the
 **relayer**. The web app never receives it.

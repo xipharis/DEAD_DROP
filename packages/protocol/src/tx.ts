@@ -30,13 +30,36 @@ export function inspectRawTx(rawTx: `0x${string}`): InspectedTx {
   };
 }
 
+export interface RelayPolicy {
+  /** Chain the relayer serves. Anything else is refused before any RPC call. */
+  chainId: number;
+  /** Minimum tip in wei. 0 (the default) relays altruistically. */
+  minTipWei?: bigint;
+  /** Address the tip must be paid to. Required once `minTipWei` is above zero. */
+  tipAddress?: `0x${string}` | undefined;
+}
+
 /**
- * Relayer-side admission control. Runs before any RPC call, so a malformed or
- * wrong-chain drop costs nothing.
+ * The tip a transaction pays a given address.
+ *
+ * Only a direct transfer counts: the relayer can read `to` and `value` straight
+ * out of the signed bytes, with no chain state and no trust in the sender. A
+ * tip routed through a contract call may well be there, but proving it would
+ * mean simulating the call — so this returns zero and the drop is judged on
+ * what can be verified offline.
+ */
+export function tipTo(tx: InspectedTx, address: `0x${string}`): bigint {
+  if (!tx.to || tx.to.toLowerCase() !== address.toLowerCase()) return 0n;
+  return tx.value ?? 0n;
+}
+
+/**
+ * Relayer-side admission control. Runs before any RPC call, so a malformed,
+ * wrong-chain or unpaid drop costs nothing.
  */
 export function assertRelayable(
   envelope: DropEnvelope,
-  policy: { chainId: number },
+  policy: RelayPolicy,
 ): InspectedTx {
   const tx = inspectRawTx(envelope.rawTx);
 
@@ -49,6 +72,17 @@ export function assertRelayable(
     throw new TxRejected(
       `signed chainId ${tx.chainId} != relayer chainId ${policy.chainId}`,
     );
+  }
+
+  const minTip = policy.minTipWei ?? 0n;
+  if (minTip > 0n) {
+    if (!policy.tipAddress) {
+      throw new TxRejected("relayer requires a tip but has no tip address configured");
+    }
+    const tip = tipTo(tx, policy.tipAddress);
+    if (tip < minTip) {
+      throw new TxRejected(`tip ${tip} wei is below the configured minimum ${minTip} wei`);
+    }
   }
 
   return tx;

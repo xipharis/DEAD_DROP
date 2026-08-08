@@ -18,3 +18,9 @@ export const DEFAULT_RELAYS = [
  * level we use. Drops above this are transport-limited to Nostr and clipboard.
  */
 export const MAX_QR_PAYLOAD_BYTES = 2_500;
+
+/**
+ * How far before startup a relayer asks relays to look. Absorbs clock skew
+ * between a publisher and the daemon; dedupe handles anything it replays.
+ */
+export const SUBSCRIBE_GRACE_SECONDS = 120;
