@@ -1,166 +1,173 @@
-/* ===========================================================================
-   Dead Drop — instrument panel
-   Visual reference: shortwave numbers stations. Untargeted broadcast into a
-   public medium, meaningful only to whoever is listening. Amber VFD glow on a
-   cold cabinet, warm paper-white data, rust for anything irreversible.
-   =========================================================================== */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --void: #090c11;
-  --panel: #111823;
-  --panel-raised: #16202e;
-  --rule: #232c38;
-  --ash: #7a8798;
-  --bone: #e8e3d8;
-  --amber: #ffb020;
-  --rust: #e2553a;
-  --lock: #7fd1de;
-
-  --rail-height: 44px;
-  --gutter: 28px;
-
-  --step-eyebrow: 0.6875rem;
-  --step-label: 0.625rem;
-  --step-body: 0.875rem;
-  --step-data: 0.8125rem;
-  --step-display: clamp(1.5rem, 3.4vw, 2.375rem);
+/* ── "Ledger Paper" — warm cream + signal red + warm ink ─────────────────
+   Cream like aged bond paper, crimson as the only loud voice, deep warm ink
+   for text. Here the semantics are transport, not markets: emerald means a
+   drop got out, brick means it did not, crimson is the protocol's own voice. */
+:root,
+html[data-theme="light"] {
+  --bg-base:        #F4EEE1;
+  --bg-surface:     #FDF8EE;
+  --bg-surface-2:   #F7F1E3;
+  --border:         rgba(62, 44, 30, 0.22);
+  --border-dim:     rgba(62, 44, 30, 0.13);
+  --text-primary:   #231812;
+  --text-muted:     rgba(35, 24, 18, 0.72);
+  --text-subtle:    rgba(35, 24, 18, 0.52);
+  --accent-live:    #0B7A52;
+  --accent-dead:    #B42318;
+  --accent-data:    #C8102E;
+  --accent-data-dim: rgba(200, 16, 46, 0.12);
+  --grid-line:      rgba(62, 44, 30, 0.065);
+  --nav-bg:         rgba(250, 244, 232, 0.92);
+  --nav-border:     rgba(62, 44, 30, 0.16);
+  --surface-pulse:  rgba(62, 44, 30, 0.05);
 }
 
 *,
 *::before,
 *::after {
   box-sizing: border-box;
-}
-
-html,
-body {
   margin: 0;
   padding: 0;
 }
 
-body {
-  background: var(--void);
-  color: var(--bone);
-  font-family: var(--font-body), system-ui, sans-serif;
-  font-size: var(--step-body);
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
+html {
+  scroll-behavior: smooth;
 }
 
+body {
+  background-color: var(--bg-base);
+  background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 40px 40px;
+  color: var(--text-primary);
+  font-family: var(--font-serif), serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Mono for all data */
+.mono,
+[data-mono],
+input[type="number"],
+.tabular-nums {
+  font-family: var(--font-mono), monospace;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(62, 44, 30, 0.22);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(200, 16, 46, 0.45);
+}
+
+/* Focus ring */
 :focus-visible {
-  outline: 2px solid var(--amber);
+  outline: 1px solid var(--accent-data);
   outline-offset: 2px;
 }
 
-/* --- status rail: the signature element -------------------------------- */
-
-.rail {
-  position: fixed;
-  inset: 0 0 auto 0;
-  z-index: 10;
-  height: var(--rail-height);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 0 var(--gutter);
-  background: var(--panel);
-  border-bottom: 1px solid var(--rule);
-  transition: background 400ms ease, border-color 400ms ease;
+/* Selection */
+::selection {
+  background: var(--accent-data-dim);
+  color: var(--text-primary);
 }
 
-.shell--dark .rail {
-  background: linear-gradient(180deg, rgba(255, 176, 32, 0.14), rgba(255, 176, 32, 0.03));
-  border-bottom-color: rgba(255, 176, 32, 0.4);
+/* Landing: transparent body so the shader canvas shows through */
+body.shader-bg {
+  background-color: transparent !important;
+  background-image: none !important;
 }
 
-.rail__state {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.rail__text {
+/* ── Signer field primitives ─────────────────────────────────────────────
+   The signing form is dense enough that these earn a class apiece rather
+   than repeating a dozen utilities per input. */
+.paper-input {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--text-primary);
   font-family: var(--font-mono), monospace;
-  font-size: var(--step-data);
-  color: var(--ash);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 0.8125rem;
+  transition: border-color 160ms ease, background 160ms ease;
 }
 
-.shell--dark .rail__text {
-  color: var(--bone);
+.paper-input::placeholder {
+  color: rgba(35, 24, 18, 0.34);
 }
 
-.rail__timer {
-  font-family: var(--font-mono), monospace;
-  font-size: var(--step-data);
-  font-variant-numeric: tabular-nums;
-  color: var(--amber);
-  padding-left: 10px;
-  margin-left: 2px;
-  border-left: 1px solid rgba(255, 176, 32, 0.35);
+.paper-input:hover {
+  border-color: rgba(62, 44, 30, 0.34);
 }
 
-.rail__brand {
+.paper-input:focus {
+  outline: none;
+  border-color: var(--accent-data);
+  background: var(--bg-surface-2);
+}
+
+.paper-input--invalid {
+  border-color: var(--accent-dead);
+}
+
+.paper-label {
   display: flex;
   align-items: baseline;
-  gap: 12px;
-  white-space: nowrap;
-}
-
-.rail__wordmark {
-  font-family: var(--font-display), monospace;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: var(--bone);
-}
-
-.rail__chain {
+  justify-content: space-between;
+  gap: 8px;
   font-family: var(--font-mono), monospace;
-  font-size: var(--step-label);
-  letter-spacing: 0.1em;
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--ash);
+  color: var(--text-subtle);
 }
 
-/* --- lamps -------------------------------------------------------------- */
-
+/* Lamp — the one live-status affordance carried over from the instrument
+   panel, restyled for paper. */
 .lamp {
-  width: 9px;
-  height: 9px;
-  flex: none;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: var(--rule);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
-  transition: background 300ms ease, box-shadow 300ms ease;
+  flex-shrink: 0;
+  background: rgba(62, 44, 30, 0.25);
 }
 
 .lamp--live {
-  background: var(--amber);
-  box-shadow: 0 0 10px rgba(255, 176, 32, 0.6);
+  background: var(--accent-live);
+  box-shadow: 0 0 8px rgba(11, 122, 82, 0.45);
 }
 
 .lamp--sent {
-  background: var(--lock);
-  box-shadow: 0 0 10px rgba(127, 209, 222, 0.55);
+  background: var(--accent-live);
+  box-shadow: 0 0 8px rgba(11, 122, 82, 0.45);
 }
 
 .lamp--failed {
-  background: var(--rust);
-  box-shadow: 0 0 10px rgba(226, 85, 58, 0.5);
+  background: var(--accent-dead);
+  box-shadow: 0 0 8px rgba(180, 35, 24, 0.45);
 }
 
 .lamp--working {
-  background: var(--amber);
-  animation: pulse 1.1s ease-in-out infinite;
+  background: var(--accent-data);
+  animation: lamp-pulse 1.1s ease-in-out infinite;
 }
 
-@keyframes pulse {
+@keyframes lamp-pulse {
   0%,
   100% {
     opacity: 0.25;
@@ -170,418 +177,10 @@ body {
   }
 }
 
-/* --- shell + grid ------------------------------------------------------- */
-
-.shell {
-  position: relative;
-  min-height: 100vh;
-  padding-top: var(--rail-height);
-}
-
-/* Static grain. Deliberately not animated — the rail is the moving part. */
-.shell::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 600ms ease;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
-}
-
-.shell--dark::before {
-  opacity: 0.035;
-}
-
-.grid {
-  position: relative;
-  z-index: 1;
-  max-width: 1360px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-}
-
-.column {
-  padding: 32px var(--gutter) 72px;
-  min-width: 0;
-}
-
-.column--right {
-  border-left: 1px solid var(--rule);
-}
-
-/* --- panel headings ----------------------------------------------------- */
-
-.eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin: 0 0 6px;
-  font-family: var(--font-display), monospace;
-  font-size: var(--step-eyebrow);
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--bone);
-}
-
-.eyebrow::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: var(--rule);
-}
-
-.eyebrow__note {
-  font-family: var(--font-mono), monospace;
-  font-size: var(--step-label);
-  font-weight: 400;
-  letter-spacing: 0.08em;
-  color: var(--ash);
-  text-transform: none;
-}
-
-.blurb {
-  margin: 0 0 26px;
-  max-width: 46ch;
-  font-size: var(--step-body);
-  color: var(--ash);
-}
-
-.legend {
-  margin: 26px 0 12px;
-  font-family: var(--font-mono), monospace;
-  font-size: var(--step-label);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ash);
-}
-
-/* --- fields ------------------------------------------------------------- */
-
-.fieldset {
-  display: grid;
-  gap: 14px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  min-width: 0;
-}
-
-.field--wide {
-  grid-column: 1 / -1;
-}
-
-.field__label {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-  font-family: var(--font-mono), monospace;
-  font-size: var(--step-label);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ash);
-}
-
-.field__unit {
-  color: var(--rule);
-  letter-spacing: 0.06em;
-}
-
-.field__input {
-  width: 100%;
-  padding: 10px 12px;
-  background: var(--panel);
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  color: var(--bone);
-  font-family: var(--font-mono), monospace;
-  font-size: var(--step-data);
-  transition: border-color 160ms ease, background 160ms ease;
-}
-
-.field__input::placeholder {
-  color: #3d4855;
-}
-
-.field__input:hover {
-  border-color: #2e3a49;
-}
-
-.field__input:focus {
-  outline: none;
-  border-color: var(--amber);
-  background: var(--panel-raised);
-}
-
-.field__input--invalid {
-  border-color: var(--rust);
-}
-
-.field__error {
-  font-size: var(--step-label);
-  letter-spacing: 0.04em;
-  color: var(--rust);
-}
-
-.field__hint {
-  font-size: var(--step-label);
-  letter-spacing: 0.04em;
-  color: var(--ash);
-}
-
-/* --- notices ------------------------------------------------------------ */
-
-.notice {
-  display: flex;
-  gap: 10px;
-  padding: 11px 13px;
-  margin-bottom: 22px;
-  border: 1px solid var(--rule);
-  border-left: 2px solid var(--ash);
-  border-radius: 2px;
-  background: var(--panel);
-  font-size: var(--step-data);
-  color: var(--ash);
-}
-
-.notice--warn {
-  border-left-color: var(--rust);
-  color: var(--bone);
-}
-
-.notice strong {
-  color: var(--bone);
-  font-weight: 600;
-}
-
-/* --- buttons ------------------------------------------------------------ */
-
-.sign {
-  width: 100%;
-  margin-top: 26px;
-  padding: 16px;
-  background: transparent;
-  border: 1px solid var(--bone);
-  border-radius: 2px;
-  color: var(--bone);
-  font-family: var(--font-display), monospace;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
-}
-
-.sign:hover:not(:disabled) {
-  background: var(--amber);
-  border-color: var(--amber);
-  color: var(--void);
-}
-
-.sign:disabled {
-  border-color: var(--rule);
-  color: #46515f;
-  cursor: not-allowed;
-}
-
-.action {
-  padding: 6px 12px;
-  background: transparent;
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  color: var(--bone);
-  font-family: var(--font-mono), monospace;
-  font-size: var(--step-label);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: border-color 160ms ease, color 160ms ease;
-}
-
-.action:hover:not(:disabled) {
-  border-color: var(--amber);
-  color: var(--amber);
-}
-
-.action:disabled {
-  color: #46515f;
-  cursor: not-allowed;
-}
-
-/* --- drop panel --------------------------------------------------------- */
-
-.empty {
-  display: grid;
-  place-content: center;
-  gap: 8px;
-  min-height: 320px;
-  padding: 32px;
-  border: 1px dashed var(--rule);
-  border-radius: 2px;
-  text-align: center;
-}
-
-.empty__title {
-  font-family: var(--font-display), monospace;
-  font-size: var(--step-eyebrow);
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: #46515f;
-}
-
-.empty__body {
-  max-width: 32ch;
-  font-size: var(--step-data);
-  color: var(--ash);
-}
-
-.qr {
-  display: block;
-  width: 100%;
-  max-width: 300px;
-  margin: 0 auto;
-  padding: 14px;
-  background: var(--bone);
-  border-radius: 2px;
-  image-rendering: pixelated;
-}
-
-.summary {
-  display: grid;
-  gap: 1px;
-  margin: 26px 0 0;
-  background: var(--rule);
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.summary__row {
-  display: grid;
-  grid-template-columns: 92px minmax(0, 1fr);
-  gap: 12px;
-  padding: 9px 12px;
-  background: var(--panel);
-}
-
-.summary__key {
-  font-family: var(--font-mono), monospace;
-  font-size: var(--step-label);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ash);
-  padding-top: 1px;
-}
-
-.summary__value {
-  font-family: var(--font-mono), monospace;
-  font-size: var(--step-data);
-  color: var(--bone);
-  word-break: break-all;
-}
-
-.summary__value--accent {
-  color: var(--amber);
-}
-
-/* --- transports --------------------------------------------------------- */
-
-.transport {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 12px;
-  padding: 13px 0;
-  border-bottom: 1px solid var(--rule);
-}
-
-.transport__name {
-  font-family: var(--font-mono), monospace;
-  font-size: var(--step-data);
-  letter-spacing: 0.06em;
-  color: var(--bone);
-}
-
-.transport__status {
-  display: block;
-  font-family: var(--font-mono), monospace;
-  font-size: var(--step-label);
-  letter-spacing: 0.1em;
-  color: var(--ash);
-}
-
-.transport__status--sent {
-  color: var(--lock);
-}
-
-.transport__status--failed {
-  color: var(--rust);
-}
-
-.hexdump {
-  margin: 20px 0 0;
-  padding: 12px;
-  max-height: 132px;
-  overflow: auto;
-  background: var(--panel);
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  font-family: var(--font-mono), monospace;
-  font-size: 0.75rem;
-  line-height: 1.65;
-  color: var(--ash);
-  word-break: break-all;
-  white-space: pre-wrap;
-}
-
-/* --- responsive --------------------------------------------------------- */
-
-@media (max-width: 900px) {
-  :root {
-    --gutter: 18px;
-  }
-
-  .grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .column {
-    padding-bottom: 40px;
-  }
-
-  .column--right {
-    border-left: none;
-    border-top: 1px solid var(--rule);
-  }
-
-  .rail__chain {
-    display: none;
-  }
-}
-
-@media (max-width: 560px) {
-  .fieldset {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .summary__row {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 3px;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   *,
   *::before,
   *::after {

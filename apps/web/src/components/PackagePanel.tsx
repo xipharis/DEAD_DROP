@@ -1,6 +1,7 @@
 "use client";
 
 import { Field } from "./Field";
+import { Button } from "@/components/ui/Button";
 import { isValueBearingChain } from "@/lib/config";
 import type { Draft, DraftErrors } from "@/lib/sign";
 
@@ -26,28 +27,43 @@ export function PackagePanel({
   const risky = Number.isInteger(chainId) && isValueBearingChain(chainId);
 
   return (
-    <section className="column" aria-labelledby="package-heading">
-      <h1 className="eyebrow" id="package-heading">
-        The package
-        <span className="eyebrow__note">signed here, on this machine</span>
+    <section aria-labelledby="package-heading">
+      <p className="font-mono text-[10px] tracking-[0.3em] uppercase text-[#C8102E] mb-3">
+        01 / The package
+      </p>
+      <h1
+        id="package-heading"
+        className="font-display font-extrabold text-2xl sm:text-3xl tracking-tight text-[color:var(--text-primary)]"
+      >
+        Signed here, on this machine
       </h1>
-      <p className="blurb">
-        Every value below is entered by hand. Nothing is fetched, so this works with the
-        radio off — read the nonce and gas price from a block explorer beforehand.
+      <p className="font-serif italic text-base mt-3 mb-7 max-w-md text-[color:var(--text-muted)]">
+        Every value below is entered by hand. Nothing is fetched, so this works with the radio
+        off — read the nonce and gas price from a block explorer beforehand.
       </p>
 
-      <div className={`notice ${risky ? "notice--warn" : ""}`}>
-        <span className="lamp" aria-hidden="true" />
-        <span>
+      <div
+        className={`flex gap-3 border rounded px-4 py-3 mb-7 text-sm ${
+          risky ? "border-[rgba(180,35,24,0.45)]" : "border-[color:var(--border-dim)]"
+        }`}
+        style={{ background: risky ? "rgba(180,35,24,0.06)" : "var(--bg-surface)" }}
+      >
+        <span className={`lamp mt-1.5 ${risky ? "lamp--failed" : ""}`} aria-hidden="true" />
+        <span className="font-serif leading-relaxed text-[color:var(--text-muted)]">
           {risky ? (
             <>
-              <strong>{`Chain ${chainId} carries real value.`}</strong> A key pasted into a
-              browser form should be one you can afford to lose.
+              <strong className="font-display font-bold text-[#B42318]">
+                Chain {chainId} carries real value.
+              </strong>{" "}
+              A key pasted into a browser form should be one you can afford to lose.
             </>
           ) : (
             <>
-              <strong>Keys stay in memory.</strong> Never written to storage, never sent
-              anywhere. A compromised browser is still a compromised browser.
+              <strong className="font-display font-bold text-[color:var(--text-primary)]">
+                Keys stay in memory.
+              </strong>{" "}
+              Never written to storage, never sent anywhere. A compromised browser is still a
+              compromised browser.
             </>
           )}
         </span>
@@ -59,7 +75,7 @@ export function PackagePanel({
           onSign();
         }}
       >
-        <div className="fieldset">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field
             id="privateKey"
             label="Signing key"
@@ -73,8 +89,10 @@ export function PackagePanel({
           />
         </div>
 
-        <p className="legend">Destination</p>
-        <div className="fieldset">
+        <p className="font-mono text-[10px] tracking-[0.25em] uppercase text-[color:var(--text-subtle)] mt-7 mb-3">
+          Destination
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field
             id="to"
             label="Recipient"
@@ -111,8 +129,10 @@ export function PackagePanel({
           />
         </div>
 
-        <p className="legend">Chain parameters</p>
-        <div className="fieldset">
+        <p className="font-mono text-[10px] tracking-[0.25em] uppercase text-[color:var(--text-subtle)] mt-7 mb-3">
+          Chain parameters
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field
             id="chainId"
             label="Chain ID"
@@ -155,9 +175,9 @@ export function PackagePanel({
           />
         </div>
 
-        <button className="sign" type="submit" disabled={signing}>
-          {signing ? "Signing…" : "Sign offline"}
-        </button>
+        <Button type="submit" size="lg" loading={signing} className="w-full mt-8">
+          {signing ? "Signing…" : "Sign Offline →"}
+        </Button>
       </form>
     </section>
   );

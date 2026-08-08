@@ -28,14 +28,14 @@ export function Field({
   const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
 
   return (
-    <div className={`field ${wide ? "field--wide" : ""}`}>
-      <label className="field__label" htmlFor={id}>
+    <div className={`flex flex-col gap-1.5 min-w-0 ${wide ? "sm:col-span-2" : ""}`}>
+      <label className="paper-label" htmlFor={id}>
         <span>{label}</span>
-        {unit ? <span className="field__unit">{unit}</span> : null}
+        {unit ? <span className="text-[rgba(35,24,18,0.38)] tracking-[0.06em]">{unit}</span> : null}
       </label>
       <input
         id={id}
-        className={`field__input ${error ? "field__input--invalid" : ""}`}
+        className={`paper-input ${error ? "paper-input--invalid" : ""}`}
         type={type}
         value={value}
         placeholder={placeholder}
@@ -46,11 +46,14 @@ export function Field({
         onChange={(event) => onChange(event.target.value)}
       />
       {error ? (
-        <span className="field__error" id={`${id}-error`}>
+        <span className="font-mono text-[10px] tracking-[0.04em] text-[#B42318]" id={`${id}-error`}>
           {error}
         </span>
       ) : hint ? (
-        <span className="field__hint" id={`${id}-hint`}>
+        <span
+          className="font-mono text-[10px] tracking-[0.04em] text-[rgba(35,24,18,0.52)]"
+          id={`${id}-hint`}
+        >
           {hint}
         </span>
       ) : null}

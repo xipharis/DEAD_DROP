@@ -1,144 +1,158 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { MAX_QR_PAYLOAD_BYTES } from "@dead-drop/protocol";
-import { PackagePanel } from "@/components/PackagePanel";
-import { DropPanel, type TransportState } from "@/components/DropPanel";
-import { StatusRail } from "@/components/StatusRail";
-import { CHAIN_ID, NOSTR_RELAYS } from "@/lib/config";
-import { publishDrop, relayLabel } from "@/lib/nostr";
-import { payloadBytes, renderQr } from "@/lib/qr";
-import { useAirgap } from "@/lib/useAirgap";
-import {
-  EMPTY_DRAFT,
-  signDraft,
-  validateDraft,
-  type Draft,
-  type SignedDrop,
-} from "@/lib/sign";
+import { useEffect } from "react";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import ShaderBackground from "@/components/ui/ShaderBackground";
+import { Wordmark } from "@/components/layout/Navbar";
+import { CHAIN_ID, NOSTR_RELAYS, chainLabel } from "@/lib/config";
 
-const IDLE: TransportState = { status: "idle", detail: "not sent" };
+const fadeUp = (delay: number, duration = 0.7) => ({
+  initial: { opacity: 0, y: 28 },
+  animate: { opacity: 1, y: 0 },
+  transition: { delay, duration, ease: [0.22, 1, 0.36, 1] as const },
+});
 
-export default function Page() {
-  const { online, darkForSeconds } = useAirgap();
+const STATS = [
+  { value: "0", label: "RPC calls" },
+  { value: String(NOSTR_RELAYS.length), label: "Relays" },
+  { value: "3", label: "Transports" },
+];
 
-  const [draft, setDraft] = useState<Draft>({ ...EMPTY_DRAFT, chainId: String(CHAIN_ID) });
-  const [showErrors, setShowErrors] = useState(false);
-  const [signing, setSigning] = useState(false);
-  const [drop, setDrop] = useState<SignedDrop | null>(null);
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
-  const [nostr, setNostr] = useState<TransportState>(IDLE);
-  const [clipboard, setClipboard] = useState<TransportState>(IDLE);
-
-  const errors = validateDraft(draft);
-  const encodedBytes = drop ? payloadBytes(drop.encoded) : 0;
-  const qrTooLarge = encodedBytes > MAX_QR_PAYLOAD_BYTES;
-
-  const handleChange = useCallback((field: keyof Draft, value: string) => {
-    setDraft((current) => ({ ...current, [field]: value }));
+export default function Landing() {
+  useEffect(() => {
+    document.body.classList.add("shader-bg");
+    return () => document.body.classList.remove("shader-bg");
   }, []);
 
-  const handleSign = useCallback(async () => {
-    if (Object.keys(validateDraft(draft)).length > 0) {
-      setShowErrors(true);
-      return;
-    }
-    setSigning(true);
-    try {
-      const signed = await signDraft(draft, darkForSeconds);
-      setDrop(signed);
-      // A new signature invalidates whatever the old one had been through.
-      setNostr(IDLE);
-      setClipboard(IDLE);
-      setShowErrors(false);
-    } catch (error) {
-      setShowErrors(true);
-      console.error(error);
-    } finally {
-      setSigning(false);
-    }
-  }, [draft, darkForSeconds]);
-
-  // The QR is rendered from the signed payload, never from the draft — there is
-  // nothing to show until bytes exist.
-  useEffect(() => {
-    if (!drop) {
-      setQrDataUrl(null);
-      return;
-    }
-    if (payloadBytes(drop.encoded) > MAX_QR_PAYLOAD_BYTES) {
-      setQrDataUrl(null);
-      return;
-    }
-
-    let live = true;
-    renderQr(drop.encoded)
-      .then((url) => {
-        if (live) setQrDataUrl(url);
-      })
-      .catch(() => {
-        if (live) setQrDataUrl(null);
-      });
-    return () => {
-      live = false;
-    };
-  }, [drop]);
-
-  const handlePublish = useCallback(async () => {
-    if (!drop) return;
-    setNostr({ status: "working", detail: `reaching ${NOSTR_RELAYS.length} relays` });
-    try {
-      const results = await publishDrop(drop.envelope);
-      const accepted = results.filter((result) => result.ok);
-      if (accepted.length === 0) {
-        setNostr({ status: "failed", detail: "no relay accepted the note" });
-        return;
-      }
-      // One relay carrying the note is enough for the swarm to find it, so a
-      // partial publish is still a success — just name who took it.
-      setNostr({
-        status: "sent",
-        detail: `accepted by ${accepted.map((result) => relayLabel(result.relay)).join(", ")}`,
-      });
-    } catch (error) {
-      setNostr({ status: "failed", detail: String(error) });
-    }
-  }, [drop]);
-
-  const handleCopy = useCallback(async () => {
-    if (!drop) return;
-    try {
-      await navigator.clipboard.writeText(drop.encoded);
-      setClipboard({ status: "sent", detail: "envelope copied — carry it off by hand" });
-    } catch {
-      setClipboard({ status: "failed", detail: "clipboard blocked; select the envelope below" });
-    }
-  }, [drop]);
-
   return (
-    <div className={`shell ${online === false ? "shell--dark" : ""}`}>
-      <StatusRail online={online} darkForSeconds={darkForSeconds} chainId={CHAIN_ID} />
-      <main className="grid">
-        <PackagePanel
-          draft={draft}
-          errors={errors}
-          showErrors={showErrors}
-          signing={signing}
-          onChange={handleChange}
-          onSign={() => void handleSign()}
+    <div className="min-h-screen flex flex-col">
+      <ShaderBackground />
+
+      {/* ── Nav ── */}
+      <motion.header
+        className="fixed top-0 left-0 right-0 z-40 px-6 h-14 flex items-center justify-between border-b backdrop-blur-md bg-[rgba(250,244,232,0.85)] border-[rgba(62,44,30,0.16)]"
+        {...fadeUp(0.1, 1)}
+      >
+        <Link href="/" aria-label="Dead Drop home">
+          <Wordmark />
+        </Link>
+
+        <div className="flex items-center gap-5">
+          <Link
+            href="/docs"
+            className="text-xs font-display tracking-widest uppercase text-[rgba(35,24,18,0.62)] hover:text-[#231812] transition-colors duration-200"
+          >
+            Docs
+          </Link>
+          <Link
+            href="/sign"
+            className="text-xs font-display tracking-widest uppercase text-[#C8102E] hover:text-[#A50D24] transition-colors duration-200"
+          >
+            Enter →
+          </Link>
+        </div>
+      </motion.header>
+
+      {/* ── Hero ── */}
+      <main className="flex-1 flex flex-col items-center justify-center pt-14 px-6 relative">
+        {/* Scrim — keeps ink text crisp over the red shader lines */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse 80% 60% at 50% 50%, rgba(247,240,227,0.85) 0%, rgba(247,240,227,0.40) 60%, transparent 100%)",
+          }}
         />
-        <DropPanel
-          drop={drop}
-          qrDataUrl={qrDataUrl}
-          qrTooLarge={qrTooLarge}
-          payloadBytes={encodedBytes}
-          nostr={nostr}
-          clipboard={clipboard}
-          relays={NOSTR_RELAYS}
-          onPublish={() => void handlePublish()}
-          onCopy={() => void handleCopy()}
-        />
+
+        <div className="w-full text-center relative z-10 flex flex-col items-center gap-8 py-24">
+          <motion.p
+            className="font-mono text-[10px] sm:text-[11px] tracking-[0.3em] uppercase text-[#C8102E]"
+            style={{ textShadow: "0 1px 14px rgba(247,240,227,0.95)" }}
+            {...fadeUp(0.25, 1)}
+          >
+            Transmit · Anyone Relays · Nobody Traces
+          </motion.p>
+
+          <motion.h1
+            className="font-display font-extrabold tracking-tight leading-none text-[#231812]"
+            style={{
+              fontSize: "clamp(2.1rem, 6.5vw, 5.5rem)",
+              textShadow:
+                "0 2px 28px rgba(247,240,227,0.95), 0 0 56px rgba(247,240,227,0.85)",
+            }}
+            {...fadeUp(0.4, 1)}
+          >
+            No Pipe, <span className="text-[#C8102E]">No Trace</span>
+          </motion.h1>
+
+          <motion.p
+            className="font-serif italic text-base sm:text-lg max-w-lg mx-auto leading-relaxed text-[rgba(35,24,18,0.78)]"
+            style={{ textShadow: "0 1px 14px rgba(247,240,227,0.95)" }}
+            {...fadeUp(0.75, 1)}
+          >
+            A signed transaction is just bytes. Sign them with the radio off, drop them into
+            any medium, and let a swarm of strangers put them on chain.
+          </motion.p>
+
+          <motion.div
+            className="flex flex-col sm:flex-row gap-3 justify-center"
+            {...fadeUp(1.05, 1)}
+          >
+            <Link
+              href="/sign"
+              className="inline-flex items-center justify-center gap-2 px-9 py-4 bg-[#c8102e] text-white font-display font-bold text-sm tracking-wider rounded hover:bg-[#a5001b] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200"
+              style={{ boxShadow: "0 10px 32px rgba(200,16,46,0.30)" }}
+            >
+              Enter Protocol →
+            </Link>
+            <Link
+              href="/docs"
+              className="inline-flex items-center justify-center gap-2 px-9 py-4 border font-display font-semibold text-sm tracking-wider rounded transition-all duration-200 border-[rgba(62,44,30,0.40)] text-[rgba(35,24,18,0.82)] hover:border-[#C8102E] hover:text-[#C8102E] hover:-translate-y-0.5 bg-[rgba(253,248,238,0.55)]"
+              style={{ backdropFilter: "blur(8px)" }}
+            >
+              How It Works
+            </Link>
+          </motion.div>
+
+          <motion.div
+            className="grid grid-cols-3 gap-8 max-w-xs mx-auto pt-8 border-t border-[rgba(62,44,30,0.22)]"
+            {...fadeUp(1.05, 1)}
+          >
+            {STATS.map(({ value, label }) => (
+              <div key={label} className="text-center">
+                <p
+                  className="font-mono text-xl text-[#C8102E]"
+                  style={{ textShadow: "0 1px 14px rgba(247,240,227,0.95)" }}
+                >
+                  {value}
+                </p>
+                <p className="text-[9px] font-display tracking-widest uppercase mt-1 text-[rgba(35,24,18,0.55)]">
+                  {label}
+                </p>
+              </div>
+            ))}
+          </motion.div>
+        </div>
       </main>
+
+      {/* ── Tech strip ── */}
+      <motion.div
+        className="border-t py-4 px-6 border-[rgba(62,44,30,0.16)] bg-[rgba(250,244,232,0.70)] backdrop-blur-sm"
+        {...fadeUp(0.3, 1)}
+      >
+        <div className="max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[10px] font-mono tracking-wider uppercase text-[rgba(35,24,18,0.48)]">
+          <span>Offline EIP-1559 Signing</span>
+          <span className="text-[#C8102E]">·</span>
+          <span>Nostr · QR · Clipboard</span>
+          <span className="text-[#C8102E]">·</span>
+          <span>Volunteer Relayer Swarm</span>
+          <span className="text-[#C8102E]">·</span>
+          <span>{chainLabel(CHAIN_ID)}</span>
+          <span className="text-[#C8102E]">·</span>
+          <span>Non-Custodial</span>
+        </div>
+      </motion.div>
     </div>
   );
 }
