@@ -1,0 +1,22 @@
+{
+  "name": "dead-drop",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Broadcast an Ethereum transaction without ever touching an RPC endpoint.",
+  "license": "MIT",
+  "packageManager": "pnpm@10.33.1",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @dead-drop/web dev",
+    "dev:relayer": "pnpm --filter @dead-drop/relayer dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}

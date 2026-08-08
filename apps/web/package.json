@@ -1,0 +1,30 @@
+{
+  "name": "@dead-drop/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Offline signer UI: signs a transaction with no network, then emits it over Nostr, QR and clipboard.",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@dead-drop/protocol": "workspace:*",
+    "html5-qrcode": "^2.3.8",
+    "next": "^15.1.0",
+    "nostr-tools": "^2.10.0",
+    "qrcode": "^1.5.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.7.3"
+  }
+}

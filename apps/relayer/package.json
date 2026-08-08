@@ -1,0 +1,27 @@
+{
+  "name": "@dead-drop/relayer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Volunteer daemon that listens on Nostr and fires eth_sendRawTransaction.",
+  "type": "module",
+  "bin": {
+    "dead-drop-relayer": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "node --env-file=../../.env --experimental-strip-types --watch src/index.ts",
+    "start": "node --env-file=../../.env --experimental-strip-types src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@dead-drop/protocol": "workspace:*",
+    "nostr-tools": "^2.10.0",
+    "viem": "^2.21.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/ws": "^8.5.13",
+    "typescript": "^5.7.3"
+  }
+}
