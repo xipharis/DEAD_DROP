@@ -172,8 +172,11 @@ every drop it sees but never calls an RPC, so it needs no `RPC_URL` at all. It i
 way to rehearse the demo.
 
 Everything is configured through `.env` — see `.env.example`, where each variable is documented
-inline. The only variable that touches Ethereum infrastructure is `RPC_URL`, and it belongs to the
-**relayer**. The web app never receives it.
+inline. `RPC_URL` belongs to the **relayer** and is the only endpoint that ever broadcasts a
+transaction. The web app carries a separate, optional `NEXT_PUBLIC_NONCE_CHECK_RPC_URL`: right
+after signing, it makes one automatic read-only call to look up the account's real next nonce and
+warn if what was typed doesn't match. That check never broadcasts anything, fails soft if the
+endpoint is unreachable, and signing itself still requires no network at all.
 
 ---
 

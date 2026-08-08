@@ -11,7 +11,7 @@ export function PageShell({ children }: { children: React.ReactNode }) {
       <footer className="border-t border-[rgba(62,44,30,0.18)] py-8 mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs font-mono text-[rgba(35,24,18,0.50)]">
-            Dead Drop — {chainLabel(CHAIN_ID)} testnet · no RPC in this browser
+            Dead Drop — {chainLabel(CHAIN_ID)} testnet · signing never touches an RPC
           </p>
           <div className="flex items-center gap-4 text-xs font-mono text-[rgba(35,24,18,0.50)]">
             <a

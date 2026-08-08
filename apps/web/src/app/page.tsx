@@ -7,7 +7,7 @@ import { Wordmark } from "@/components/layout/Navbar";
 import { CHAIN_ID, NOSTR_RELAYS, chainLabel } from "@/lib/config";
 
 const STATS = [
-  { value: "0", label: "RPC calls" },
+  { value: "0", label: "RPC calls to sign" },
   { value: String(NOSTR_RELAYS.length), label: "Relays" },
   { value: "3", label: "Transports" },
 ];

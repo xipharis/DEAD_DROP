@@ -285,7 +285,10 @@ export default function DocsPage() {
                   a relayer can read.
                 </p>
                 <p className="font-serif text-[15px] leading-relaxed text-[color:var(--text-muted)]">
-                  The web app has no RPC URL at all. The relayer has the only one in the system.
+                  Signing itself never touches an RPC. The one exception: right after signing, the
+                  web app makes a single automatic call to check the account&apos;s real next
+                  nonce and warn if what was entered does not match — a courtesy check, not a
+                  requirement, and it fails soft if unreachable.
                 </p>
               </div>
             </Reveal>

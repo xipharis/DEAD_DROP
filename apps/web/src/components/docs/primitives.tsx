@@ -71,8 +71,10 @@ export function ParallaxSection({
   const y = useTransform(scrollYProgress, [0, 1], [speed, -speed]);
 
   return (
-    <div ref={ref} className={className}>
-      <motion.div style={{ y }}>{children}</motion.div>
+    <div ref={ref}>
+      <motion.div className={className} style={{ y }}>
+        {children}
+      </motion.div>
     </div>
   );
 }
