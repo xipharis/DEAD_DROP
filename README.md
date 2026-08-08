@@ -177,18 +177,6 @@ inline. The only variable that touches Ethereum infrastructure is `RPC_URL`, and
 
 ---
 
-## The demo
-
-1. Laptop on stage, Wi-Fi visibly switched off.
-2. Sign a Sepolia transaction in the browser. A QR code appears.
-3. A judge scans it with their phone, which relays it — or a relayer already listening on Nostr
-   picks it up the moment connectivity returns to *any* participant.
-4. The transaction lands on Sepolia in seconds. Block explorer on the projector.
-
-The laptop that authorized the transfer never made a network request.
-
----
-
 ## Security notes
 
 This is hackathon software. Read before pointing it at anything valuable.
