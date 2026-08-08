@@ -1,6 +1,6 @@
 {
   "name": "@dead-drop/web",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Offline signer UI: signs a transaction with no network, then emits it over Nostr, QR and clipboard.",
   "type": "module",
